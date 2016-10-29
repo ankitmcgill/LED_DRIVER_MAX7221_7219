@@ -8,3 +8,71 @@
 * ***********************************************/
 
 #include "MAX7221_7219.h"
+
+//FUNCTION POINTER TO FUNCTION USED BY LIBRARY
+//TO CLOCK OUT THE DATA
+//TO BE SET HERE BEFORE USING THE LIBRARY !!
+void (*MAX7221_7219_transport_pointer)(uint32_t, uint32_t) = &ESP8266_SPI_send;
+
+void MAX7221_7219_init(void)
+{
+	//INTIALIZE THE MAX7221 IC AND BRING
+	//IT OUT OF SHUTDOWN
+
+	//BRING OUT OF SHUTDOWN
+	MAX7221_7219_send(MAX7221_ADDRESS_SHUTDOWN, MAX7221_DATA_NORMAL);
+
+	//SET INTENSITY TO MAX
+	//BRIGHTNESS WILL BE CONTROLLED BY EXTERNAL POT ON IRET PIN
+	MAX7221_7219_send(MAX7221_ADDRESS_INTENSITY, MAX7221_SET_INTENSITY_LVL_15);
+
+	//SET THE SCAN LIMIT TO ALL DIGITS
+	MAX7221_7219_send(MAX7221_ADDRESS_SCAN_LIMIT, MAX7221_SCAN_LIMIT_DIG0_DIG7);
+
+	//SET DECODING TO NONE
+	MAX7221_7219_send(MAX7221_ADDRESS_DECODE_MODE, MAX7221_DATA_NO_DECODE);
+}
+
+void MAX7221_7219_send(uint8_t address, uint8_t data)
+{
+	//SEND DATA TO MAX7221
+	//ADDRESS(8) ... DATA(8)
+
+	(*MAX7221_7219_transport_pointer)(address, data);
+}
+
+void MAX7221_7219_draw_digit(uint8_t digit_num, uint8_t digit_val)
+{
+	(*MAX7221_7219_transport_pointer)(digit_num, digit_val);
+}
+
+void MAX7221_7219_clear_display(void)
+{
+	//CLEAR THE DISPLAY
+	uint8_t i = 0;
+
+	for(i=0; i<8; i++)
+	{
+		MAX7221_7219_draw_digit(i +1, 0x00);
+	}
+
+}
+
+void MAX7221_7219_display_test(uint8_t on)
+{
+	//START/ STOP DISPLAY TEST BASED ON
+	//ARGUMENT VALUE
+	//		0: STOP TEST
+	//		1: START TEST
+
+	if(on == MAX7221_TRUE)
+	{
+		MAX7221_7219_send(MAX7221_ADDRESS_DISPLAY_TEST, MAX7221_DISPLAY_TEST_ON);
+	}
+	else
+	{
+		MAX7221_7219_send(MAX7221_ADDRESS_DISPLAY_TEST, MAX7221_DISPLAY_TEST_OFF);
+	}
+}
+
+
